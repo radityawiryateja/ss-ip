@@ -12,8 +12,8 @@
   #card { width: 390px; background: var(--bg); color: var(--text); position: relative; overflow: hidden;
           padding-bottom: 14px; {% if not full %}max-height: 760px;{% endif %} }
   .hero { position: relative; padding: 14px 0 18px; text-align: center;
-          {% if p.header %}background: {{ p.header }};{% endif %} }
-  .pat { position: absolute; width: 22px; height: 22px; opacity: .45; object-fit: contain; }
+          background: {{ p.header if p.header else 'linear-gradient(180deg, color-mix(in srgb, var(--accent) 20%, var(--bg)) 0%, var(--bg) 100%)' }}; }
+  .pat { position: absolute; width: 30px; height: 30px; opacity: .75; object-fit: contain; }
   .status { display: flex; justify-content: space-between; align-items: center; padding: 0 28px 10px; font-weight: 600; font-size: 15px;
             {% if p.header %}color: #fff;{% endif %} }
   .back { position: absolute; left: 14px; top: 38px; width: 34px; height: 34px; border-radius: 50%;
@@ -41,8 +41,12 @@
   .ch .t { font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; }
   .ch .t small { font-weight: 400; color: var(--sub); font-size: 13px; white-space: nowrap; }
   .ch .m { color: var(--sub); font-size: 14px; margin-top: 2px; }
-  .gifts { display: flex; gap: 6px; padding: 12px 14px 0; }
-  .gift { width: 52px; height: 52px; border-radius: 12px; background: var(--card) center/contain no-repeat; }
+  .btn-row { color: var(--accent); }
+  .btn-row.danger { color: #ff3b30; }
+  .tabs { display: flex; align-items: center; gap: 4px; background: var(--card); border-radius: 20px; margin: 12px 14px 0; padding: 4px; font-size: 13px; }
+  .tab { padding: 7px 12px; border-radius: 16px; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .tab.on { background: var(--bg); }
+  .tab img { width: 15px; height: 15px; object-fit: contain; }
   .mark { text-align: center; font-size: 10px; color: var(--sub); opacity: .75; margin-top: 12px; padding: 0 14px; }
 </style>
 </head>
@@ -68,7 +72,6 @@
   </div>
 
   {% if p.music %}<div class="music">♫ <b>{{ p.music.title }}</b><span>{{ p.music.artist }}</span> ›</div>{% endif %}
-  {% if p.gifts %}<div class="gifts">{% for g in p.gifts %}<div class="gift" style="background-image:url('{{ g }}')"></div>{% endfor %}</div>{% endif %}
 
   {% if p.channel %}
   <div class="section-h"><span>{{ L.channel }}</span><span>{{ p.channel.subs }} {{ L.subscribers }}</span></div>
@@ -87,6 +90,17 @@
       {% if p.handles|length > 1 %}<div class="val">{{ L.also }} {% for h in p.handles[1:] %}<span class="lnk">@{{ h }}</span> {% endfor %}</div>{% endif %}
     </div>{% endif %}
     {% if p.bio %}<div class="row"><div class="lbl">{{ L.bio }}</div><div class="val">{{ p.bio | linkify }}</div></div>{% endif %}
+    {% if not p.is_self %}
+      {% if not p.contact %}<div class="row btn-row"><div class="val">{{ L.add_contact }}</div></div>{% endif %}
+      <div class="row btn-row danger"><div class="val">{{ L.block }}</div></div>
+    {% endif %}
+  </div>
+
+  <div class="tabs">
+    <div class="tab on">Posts</div>
+    <div class="tab">Gifts{% for g in p.gifts[:3] %}<img src="{{ g }}">{% endfor %}</div>
+    <div class="tab">Media</div>
+    <div class="tab">Files</div>
   </div>
 
   <div class="mark">{{ mark }}</div>
