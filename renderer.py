@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 
@@ -20,10 +21,10 @@ def linkify(text: str) -> Markup:
 env.filters["linkify"] = linkify
 
 # posisi emoji pattern di sekeliling avatar (x, y, rotasi)
-PATTERN_POS = [(30, 70, -15), (320, 64, 12), (14, 150, 8), (342, 150, -10),
-               (88, 44, 20), (262, 40, -18), (56, 215, -8), (300, 215, 15),
-               (150, 22, 5), (215, 24, -5), (100, 120, -12), (270, 118, 10),
-               (24, 230, 14), (340, 232, -14), (130, 235, 6), (240, 238, -8)]
+PATTERN_POS = [(24, 70, -15), (70, 112, 10), (28, 158, 8), (100, 70, 18),
+               (112, 160, -12), (60, 196, -8), (300, 72, 12), (340, 118, -10),
+               (278, 156, 14), (346, 176, -14), (250, 68, -18), (306, 198, 8),
+               (150, 54, 5), (230, 54, -5)]
 
 
 class Renderer:
@@ -39,7 +40,8 @@ class Renderer:
                      full: bool, mark: str) -> bytes:
         html = env.get_template("profile.html").render(
             p=profile, t=theme, L=strings, full=full, mark=mark,
-            clock=profile["fetched_at"].strftime("%H:%M"),
+            clock=profile["fetched_at"].strftime("%H.%M"),
+            battery=os.getenv("BATTERY", "").strip(),
             pattern_pos=PATTERN_POS,
         )
         page = await self.browser.new_page(
