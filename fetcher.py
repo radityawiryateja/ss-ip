@@ -5,7 +5,13 @@ dibungkus try/except: kalau versi Telethon kamu belum mendukung, bagian itu
 dilewati dan sisanya tetap jalan.
 """
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+try:
+    from zoneinfo import ZoneInfo
+    WIB = ZoneInfo("Asia/Jakarta")
+except Exception:  # tzdata belum terpasang -> fallback UTC+7
+    WIB = timezone(timedelta(hours=7))
 
 from telethon import types
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -48,8 +54,13 @@ def presence(status, L: dict) -> str:
     if isinstance(status, types.UserStatusLastMonth):
         return L["lastmonth"]
     if isinstance(status, types.UserStatusOffline):
-        t = status.was_online.astimezone().strftime("%d.%m.%y %H:%M")
-        return f"{L['lastseen']} {t}"
+        seen = status.was_online.astimezone(WIB)
+        today = datetime.now(WIB).date()
+        if seen.date() == today:
+            return f"{L['lastseen']} today at {seen:%H:%M}"
+        if (today - seen.date()).days == 1:
+            return f"{L['lastseen']} yesterday at {seen:%H:%M}"
+        return f"{L['lastseen']} {seen:%d.%m.%y}"
     return L["longago"]
 
 
@@ -78,17 +89,49 @@ async def _emoji_pattern(client, emoji_id):
         return None
 
 
-async def _music(client, input_user):
+def _audio_info(doc):
+    for a in getattr(doc, "attributes", None) or []:
+        if isinstance(a, types.DocumentAttributeAudio):
+            return {"title": a.title or "", "artist": a.performer or ""}
+    return None
+
+
+async def _music(client, input_user, fu):
+    # 1) field langsung di UserFull (layer API baru)
+    info = _audio_info(getattr(fu, "saved_music", None))
+    if info:
+        return info
+    # 2) cadangan: request khusus
     try:
         from telethon.tl.functions.users import GetSavedMusicRequest
         res = await client(GetSavedMusicRequest(id=input_user, offset=0, limit=1))
         for doc in res.documents:
-            for a in doc.attributes:
-                if isinstance(a, types.DocumentAttributeAudio):
-                    return {"title": a.title or "", "artist": a.performer or ""}
-    except Exception:
-        pass
+            info = _audio_info(doc)
+            if info:
+                return info
+    except Exception as e:
+        print("[music] gagal:", repr(e))
     return None
+
+
+def short_date(d) -> str:
+    d = d.astimezone(WIB)
+    return f"{d:%d/%m}" if d.year == datetime.now(WIB).year else f"{d:%d/%m/%y}"
+
+
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def fmt_birthday(b):
+    if not b:
+        return None
+    s = f"{b.day} {MONTHS[b.month - 1]}"
+    year = getattr(b, "year", None)
+    if year:
+        today = datetime.now(WIB).date()
+        age = today.year - year - ((today.month, today.day) < (b.month, b.day))
+        s += f" {year} ({age} years old)"
+    return s
 
 
 async def _gifts(client, input_user, limit=6):
@@ -127,7 +170,7 @@ async def _personal_channel(client, fu, full):
             "subs": fc.full_chat.participants_count,
             "photo": data_uri(await client.download_profile_photo(ch, file=bytes)),
             "text": (last.message or "")[:60] if last else "",
-            "date": last.date.strftime("%d/%m/%y") if last else "",
+            "date": short_date(last.date) if last else "",
         }
     except Exception:
         return None
@@ -170,8 +213,10 @@ async def fetch_profile(client, username: str, L: dict, dark: bool) -> dict:
         "photo": data_uri(await client.download_profile_photo(entity, file=bytes)),
         "header": header,
         "pattern": pattern,
-        "music": await _music(client, input_user),
+        "music": await _music(client, input_user, fu),
+        "birthday": fmt_birthday(getattr(fu, "birthday", None)),
+        "location": (getattr(getattr(fu, "business_location", None), "address", None) or None),
         "gifts": await _gifts(client, input_user),
         "channel": await _personal_channel(client, fu, full),
-        "fetched_at": datetime.now().astimezone(),
+        "fetched_at": datetime.now(WIB),
     }
