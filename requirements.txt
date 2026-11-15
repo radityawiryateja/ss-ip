@@ -2,3 +2,4 @@ telethon
 playwright
 jinja2
 python-dotenv
+tzdata
