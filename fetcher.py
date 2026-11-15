@@ -162,6 +162,8 @@ async def fetch_profile(client, username: str, L: dict, dark: bool) -> dict:
         "premium": bool(getattr(entity, "premium", False)),
         "verified": bool(entity.verified),
         "bot": bool(entity.bot),
+        "contact": bool(getattr(entity, "contact", False)),
+        "is_self": bool(getattr(entity, "is_self", False)),
         "status": "" if entity.bot else presence(entity.status, L),
         "handles": handles,
         "bio": fu.about or "",
