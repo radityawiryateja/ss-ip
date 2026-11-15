@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: {{ t.bg }}; --card: {{ t.card }}; --text: {{ t.text }};
+    --sub: {{ t.sub }}; --accent: {{ t.accent }}; --sep: {{ t.sep }}; --btn: {{ t.btn }};
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: transparent; font-family: -apple-system, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif; }
+  #card { width: 390px; background: var(--bg); color: var(--text); position: relative; overflow: hidden;
+          padding-bottom: 14px; {% if not full %}max-height: 760px;{% endif %} }
+  .hero { position: relative; padding: 14px 0 18px; text-align: center;
+          {% if p.header %}background: {{ p.header }};{% endif %} }
+  .pat { position: absolute; width: 22px; height: 22px; opacity: .45; object-fit: contain; }
+  .status { display: flex; justify-content: space-between; align-items: center; padding: 0 28px 10px; font-weight: 600; font-size: 15px;
+            {% if p.header %}color: #fff;{% endif %} }
+  .back { position: absolute; left: 14px; top: 38px; width: 34px; height: 34px; border-radius: 50%;
+          background: rgba(120,120,128,.25); display: grid; place-items: center; z-index: 2; }
+  .avatar { width: 96px; height: 96px; border-radius: 50%; margin: 6px auto 0; background: var(--card) center/cover; position: relative; z-index: 1; }
+  .name { margin-top: 12px; font-size: 22px; font-weight: 600; position: relative; z-index: 1;
+          {% if p.header %}color: #fff;{% endif %} }
+  .star { color: var(--accent); font-size: 18px; margin-left: 4px; }
+  .seen { font-size: 14px; color: var(--sub); margin-top: 3px; position: relative; z-index: 1;
+          {% if p.header %}color: rgba(255,255,255,.8);{% endif %} }
+  .actions { display: flex; gap: 8px; padding: 14px 14px 0; }
+  .act { flex: 1; background: var(--btn); border-radius: 14px; padding: 10px 0 8px; text-align: center; color: var(--accent); font-size: 11px; }
+  .act svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; margin: 0 auto 4px; }
+  .music { text-align: center; font-size: 12px; margin-top: 12px; color: var(--accent); }
+  .music b { font-weight: 600; } .music span { color: var(--sub); margin-left: 6px; }
+  .section-h { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); text-transform: uppercase; padding: 14px 28px 6px; letter-spacing: .2px; }
+  .block { background: var(--card); border-radius: 14px; margin: 0 14px; overflow: hidden; }
+  .row { padding: 10px 16px; border-bottom: 1px solid var(--sep); }
+  .row:last-child { border-bottom: 0; }
+  .lbl { font-size: 13px; color: var(--sub); }
+  .val { font-size: 16px; line-height: 1.3; margin-top: 2px; word-wrap: break-word; }
+  .lnk { color: var(--accent); }
+  .ch { display: flex; gap: 12px; align-items: center; padding: 12px 14px; }
+  .ch .ph { width: 44px; height: 44px; border-radius: 50%; background: var(--sep) center/cover; flex: none; }
+  .ch .t { font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; }
+  .ch .t small { font-weight: 400; color: var(--sub); font-size: 13px; white-space: nowrap; }
+  .ch .m { color: var(--sub); font-size: 14px; margin-top: 2px; }
+  .gifts { display: flex; gap: 6px; padding: 12px 14px 0; }
+  .gift { width: 52px; height: 52px; border-radius: 12px; background: var(--card) center/contain no-repeat; }
+  .mark { text-align: center; font-size: 10px; color: var(--sub); opacity: .75; margin-top: 12px; padding: 0 14px; }
+</style>
+</head>
+<body>
+<div id="card">
+  <div class="hero">
+    {% if p.pattern %}{% for x, y, r in pattern_pos %}
+      <img class="pat" src="{{ p.pattern }}" style="left:{{ x }}px; top:{{ y }}px; transform: rotate({{ r }}deg)">
+    {% endfor %}{% endif %}
+    <div class="status"><span>{{ clock }}</span><span></span></div>
+    <div class="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div class="avatar" {% if p.photo %}style="background-image:url('{{ p.photo }}')"{% endif %}></div>
+    <div class="name">{{ p.name }}{% if p.premium %}<span class="star">★</span>{% endif %}{% if p.verified %}<span class="star">✔</span>{% endif %}</div>
+    {% if p.status %}<div class="seen">{{ p.status }}</div>{% endif %}
+  </div>
+
+  <div class="actions">
+    <div class="act"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>{{ L.call }}</div>
+    {% if not p.bot %}<div class="act"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="12" height="12" rx="3"/><path d="M15 10l6-3v10l-6-3"/></svg>{{ L.video }}</div>{% endif %}
+    <div class="act"><svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0112 0v6l2 2H4z"/><path d="M10 21h4"/></svg>{{ L.mute }}</div>
+    <div class="act"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>{{ L.search }}</div>
+    <div class="act"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>{{ L.more }}</div>
+  </div>
+
+  {% if p.music %}<div class="music">♫ <b>{{ p.music.title }}</b><span>{{ p.music.artist }}</span> ›</div>{% endif %}
+  {% if p.gifts %}<div class="gifts">{% for g in p.gifts %}<div class="gift" style="background-image:url('{{ g }}')"></div>{% endfor %}</div>{% endif %}
+
+  {% if p.channel %}
+  <div class="section-h"><span>{{ L.channel }}</span><span>{{ p.channel.subs }} {{ L.subscribers }}</span></div>
+  <div class="block"><div class="ch">
+    <div class="ph" {% if p.channel.photo %}style="background-image:url('{{ p.channel.photo }}')"{% endif %}></div>
+    <div style="min-width:0"><div class="t"><span>{{ p.channel.title }}</span><small>{{ p.channel.date }}</small></div>
+    <div class="m">{{ p.channel.text }}</div></div>
+  </div></div>
+  {% endif %}
+
+  <div class="section-h" style="padding-top:12px"></div>
+  <div class="block">
+    {% if p.handles %}
+    <div class="row"><div class="lbl">{{ L.username }}</div>
+      <div class="val lnk">@{{ p.handles[0] }}</div>
+      {% if p.handles|length > 1 %}<div class="val">{{ L.also }} {% for h in p.handles[1:] %}<span class="lnk">@{{ h }}</span> {% endfor %}</div>{% endif %}
+    </div>{% endif %}
+    {% if p.bio %}<div class="row"><div class="lbl">{{ L.bio }}</div><div class="val">{{ p.bio | linkify }}</div></div>{% endif %}
+  </div>
+
+  <div class="mark">{{ mark }}</div>
+</div>
+</body>
+</html>
